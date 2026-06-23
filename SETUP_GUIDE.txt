@@ -1,0 +1,81 @@
+═══════════════════════════════════════════════════════════
+  FATIMA NURSING COLLEGE — MANAGEMENT SYSTEM
+  SETUP GUIDE (Read this first!)
+═══════════════════════════════════════════════════════════
+
+STEP 1: FIREBASE SETUP (Free - 5 minutes)
+─────────────────────────────────────────
+1. Go to: https://console.firebase.google.com
+2. Click "Add Project"
+3. Project name: fatima-nursing-college
+4. Disable Google Analytics → Click "Create Project"
+5. Wait for project to create → Click "Continue"
+
+STEP 2: CREATE FIRESTORE DATABASE
+──────────────────────────────────
+1. In left sidebar, click "Firestore Database"
+2. Click "Create Database"
+3. Select "Start in TEST MODE" → Click "Next"
+4. Choose location: "asia-south1 (Mumbai)" → Click "Done"
+5. Wait for database to create
+
+STEP 3: GET YOUR CONFIG
+────────────────────────
+1. Click the gear icon (⚙) → "Project Settings"
+2. Scroll down to "Your apps"
+3. Click "</>" (Web) icon
+4. App nickname: FNC → Click "Register App"
+5. You will see firebaseConfig like this:
+
+   const firebaseConfig = {
+     apiKey: "AIza...",
+     authDomain: "fatima-nursing...",
+     projectId: "fatima-nursing...",
+     storageBucket: "fatima-nursing...",
+     messagingSenderId: "1234...",
+     appId: "1:1234..."
+   };
+
+6. COPY these values
+
+STEP 4: UPDATE CONFIG FILE
+────────────────────────────
+1. Open: js/firebase-config.js
+2. Replace each "YOUR_..." value with your actual values:
+
+   apiKey:            "AIzaSy..." (your actual key)
+   authDomain:        "fatima-nursing-college.firebaseapp.com"
+   projectId:         "fatima-nursing-college"
+   storageBucket:     "fatima-nursing-college.appspot.com"
+   messagingSenderId: "123456789"
+   appId:             "1:123456789:web:abc123"
+
+3. Save the file
+
+STEP 5: OPEN THE WEBSITE
+─────────────────────────
+1. Open index.html in Chrome browser
+2. System will load automatically
+3. Start adding students!
+
+STEP 6: DEPLOY ONLINE (GitHub Pages - Free)
+────────────────────────────────────────────
+1. Go to github.com → Create new repository
+2. Name: fatima-nursing-college
+3. Upload all files (index.html, css/, js/ folders)
+4. Go to Settings → Pages → Branch: main → Save
+5. Your link: https://USERNAME.github.io/fatima-nursing-college
+
+THAT'S IT! Website will be live 24/7 for FREE!
+
+═══════════════════════════════════════════════════════════
+  FILE STRUCTURE:
+  FatimaNursingCollege/
+  ├── index.html          ← Main website file
+  ├── css/
+  │   └── style.css       ← All styles
+  ├── js/
+  │   ├── firebase-config.js  ← Firebase keys (YOU EDIT THIS)
+  │   └── app.js          ← All functionality
+  └── SETUP_GUIDE.txt     ← This file
+═══════════════════════════════════════════════════════════

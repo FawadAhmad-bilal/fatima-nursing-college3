@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fatima Nursing College — Management System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen" style="
+  position:fixed;inset:0;background:linear-gradient(135deg,#064e24,#0f6b3c);
+  display:flex;align-items:center;justify-content:center;z-index:9999;padding:1rem">
+  <div style="background:white;border-radius:20px;padding:2.5rem;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="text-align:center;margin-bottom:1.8rem">
+      <div style="width:64px;height:64px;background:linear-gradient(135deg,#0f6b3c,#064e24);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#f0b429;margin:0 auto 12px">F</div>
+      <h1 style="font-size:20px;font-weight:800;color:#111827">Fatima Nursing College</h1>
+      <p style="font-size:13px;color:#6b7280;margin-top:4px">Management System — Please login</p>
+    </div>
+    <div style="margin-bottom:1rem">
+      <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#6b7280;display:block;margin-bottom:5px">Password</label>
+      <input type="password" id="login-pass" placeholder="Enter password"
+        style="width:100%;padding:10px 14px;border:1.5px solid #d1d5db;border-radius:8px;font-size:14px;font-family:inherit;outline:none"
+        onfocus="this.style.borderColor='#0f6b3c'" onblur="this.style.borderColor='#d1d5db'">
+      <div id="login-err" style="color:#dc2626;font-size:12px;margin-top:5px;min-height:16px"></div>
+    </div>
+    <button onclick="doLogin()" style="
+      width:100%;padding:11px;background:linear-gradient(135deg,#0f6b3c,#064e24);
+      color:white;border:none;border-radius:8px;font-size:14px;font-weight:700;
+      cursor:pointer;font-family:inherit">
+      Login →
+    </button>
+    <p style="text-align:center;font-size:11px;color:#9ca3af;margin-top:1rem">
+      Fatima Nursing College Management System
+    </p>
+  </div>
+</div>
+
+
+<!-- Firebase Loading Screen -->
+<div class="fb-loading" id="fb-loading">
+  <div class="fb-spinner"></div>
+  <div style="text-align:center">
+    <div style="font-size:16px;font-weight:700;color:var(--gray-700)">Fatima Nursing College</div>
+    <div style="font-size:13px;color:var(--gray-400);margin-top:4px">Loading system...</div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- APP LAYOUT -->
+<div class="app">
+
+  <!-- ═══ SIDEBAR ═══ -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">F</div>
+      <div class="brand-name">Fatima Nursing College</div>
+      <div class="brand-sub">Management System</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main Menu</div>
+      <button class="nav-item active" data-page="dashboard" onclick="showPage('dashboard')">
+        <span class="nav-icon">🏠</span> Dashboard
+      </button>
+      <button class="nav-item" data-page="students" onclick="showPage('students')">
+        <span class="nav-icon">👩‍🎓</span> Students
+      </button>
+      <button class="nav-item" data-page="fees" onclick="showPage('fees')">
+        <span class="nav-icon">💰</span> Fee Management
+      </button>
+      <button class="nav-item" data-page="attendance" onclick="showPage('attendance')">
+        <span class="nav-icon">📅</span> Attendance
+      </button>
+
+      <div class="nav-section-label" style="margin-top:12px">Quick Actions</div>
+      <button class="nav-item" onclick="showPage('students');openAddStudent()">
+        <span class="nav-icon">➕</span> Add Student
+      </button>
+      <button class="nav-item" onclick="showPage('fees');openAddFee()">
+        <span class="nav-icon">🧾</span> Record Fee
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar">A</div>
+        <div>
+          <div class="user-name">Admin</div>
+          <div class="user-role">Administrator</div>
+        </div>
+      </div>
+      <button onclick="doLogout()" style="width:100%;padding:8px;margin-top:8px;background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">🔒 Logout</button>
+    </div>
+  </aside>
+
+  <!-- ═══ MAIN CONTENT ═══ -->
+  <main class="main">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-title" id="topbar-title">Dashboard</div>
+      <div class="topbar-date" id="topbar-date"></div>
+    </header>
+
+    <div class="content">
+
+      <!-- ════════════════════════════
+           DASHBOARD PAGE
+      ════════════════════════════ -->
+      <div class="page active" id="page-dashboard">
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon si-green">👩‍🎓</div>
+            <div>
+              <div class="stat-value" id="d-active">0</div>
+              <div class="stat-label">Active Students</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon si-blue">🎓</div>
+            <div>
+              <div class="stat-value" id="d-grad">0</div>
+              <div class="stat-label">Graduated</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon si-yellow">📅</div>
+            <div>
+              <div class="stat-value" id="d-att">0</div>
+              <div class="stat-label">Present Today</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon si-green">💰</div>
+            <div>
+              <div class="stat-value" id="d-fee">Rs. 0</div>
+              <div class="stat-label">Fee Today</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Recent Students</span>
+              <button class="btn btn-primary btn-sm" onclick="showPage('students');openAddStudent()">+ Add Student</button>
+            </div>
+            <div class="card-body" id="d-recent" style="padding-top:0"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Students by Batch</span>
+            </div>
+            <div class="card-body" id="d-batches" style="padding-top:0"></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:20px">
+          <div class="card-header"><span class="card-title">Quick Actions</span></div>
+          <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-primary" onclick="showPage('students');openAddStudent()">👩‍🎓 Add New Student</button>
+            <button class="btn btn-accent" onclick="showPage('fees');openAddFee()">💰 Record Fee Payment</button>
+            <button class="btn btn-outline" onclick="showPage('attendance')">📅 Mark Attendance</button>
+            <button class="btn btn-outline" onclick="showPage('fees')">📋 View Fee Records</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════
+           STUDENTS PAGE
+      ════════════════════════════ -->
+      <div class="page" id="page-students">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+          <div>
+            <h2 style="font-size:20px;font-weight:700">Students</h2>
+            <div style="font-size:13px;color:var(--gray-400);margin-top:2px" id="st-count">0 students</div>
+          </div>
+          <button class="btn btn-primary" onclick="openAddStudent()">+ Add Student</button>
+        </div>
+
+        <div class="card">
+          <div class="card-body">
+            <div class="search-bar">
+              <div class="search-input-wrap">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="st-search" class="form-input" placeholder="Search name, roll no…" oninput="renderStudents()">
+              </div>
+              <select class="form-select" id="st-batch-filter" onchange="renderStudents()" style="max-width:150px">
+                <option value="">All Batches</option>
+              </select>
+              <select class="form-select" id="st-status-filter" onchange="renderStudents()" style="max-width:140px">
+                <option value="Active">Active</option>
+                <option value="Graduated">Graduated</option>
+                <option value="Dropped">Dropped</option>
+                <option value="">All</option>
+              </select>
+            </div>
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Roll No</th>
+                    <th>Name / Father</th>
+                    <th>Batch</th>
+                    <th>Year</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="st-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════
+           FEES PAGE
+      ════════════════════════════ -->
+      <div class="page" id="page-fees">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+          <div>
+            <h2 style="font-size:20px;font-weight:700">Fee Management</h2>
+            <div style="font-size:13px;color:var(--gray-400);margin-top:2px" id="fee-total-lbl">Total: Rs. 0</div>
+          </div>
+          <button class="btn btn-primary" onclick="openAddFee()">+ Record Fee</button>
+        </div>
+
+        <div class="card">
+          <div class="card-body">
+            <div class="search-bar">
+              <div class="search-input-wrap">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="fee-search" class="form-input" placeholder="Search student…" oninput="renderFees()">
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Receipt No</th>
+                    <th>Student</th>
+                    <th>Type</th>
+                    <th>Month / Year</th>
+                    <th>Amount</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="fee-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════
+           ATTENDANCE PAGE
+      ════════════════════════════ -->
+      <div class="page" id="page-attendance">
+
+        <!-- Mark Section -->
+        <div id="att-section">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+            <div>
+              <h2 style="font-size:20px;font-weight:700">Mark Attendance</h2>
+              <div style="font-size:13px;color:var(--gray-400);margin-top:2px" id="att-date-label"></div>
+            </div>
+            <button class="btn btn-outline" onclick="showAttReport()">📊 Monthly Report</button>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <input type="date" id="att-date" class="form-input" style="max-width:170px" onchange="renderAttMark()">
+                <select class="form-select" id="att-batch-filter" onchange="renderAttMark()" style="max-width:150px">
+                  <option value="">All Batches</option>
+                </select>
+                <button class="btn btn-outline btn-sm" onclick="markAllAtt('Present')">✅ All Present</button>
+                <button class="btn btn-danger btn-sm" onclick="markAllAtt('Absent')">All Absent</button>
+              </div>
+            </div>
+            <div class="card-body" style="padding:0">
+              <div class="table-wrap">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Roll No</th>
+                      <th>Name / Father</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="att-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+            <div style="padding:16px 20px;border-top:1px solid var(--gray-100)">
+              <button class="btn btn-primary" onclick="saveAttendance()">💾 Save Attendance</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Report Section -->
+        <div id="rpt-section" style="display:none">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+            <div>
+              <h2 style="font-size:20px;font-weight:700">Monthly Attendance Report</h2>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Print</button>
+              <button class="btn btn-outline btn-sm" onclick="hideAttReport()">← Back</button>
+            </div>
+          </div>
+
+          <div class="card no-print" style="margin-bottom:16px">
+            <div class="card-body" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <select class="form-select" id="rpt-month" onchange="renderReport()" style="max-width:140px">
+                <option value="1">January</option><option value="2">February</option>
+                <option value="3">March</option><option value="4">April</option>
+                <option value="5">May</option><option value="6">June</option>
+                <option value="7">July</option><option value="8">August</option>
+                <option value="9">September</option><option value="10">October</option>
+                <option value="11">November</option><option value="12">December</option>
+              </select>
+              <select class="form-select" id="rpt-year" onchange="renderReport()" style="max-width:110px">
+                <option>2023</option><option>2024</option><option>2025</option><option selected>2026</option>
+              </select>
+              <select class="form-select" id="rpt-batch" onchange="renderReport()" style="max-width:150px">
+                <option value="">All Batches</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-body" style="padding:0">
+              <div class="table-wrap">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Roll No</th><th>Name</th><th>Batch</th>
+                      <th>Present</th><th>Absent</th><th>Leave</th>
+                      <th>Total</th><th>Attendance %</th>
+                    </tr>
+                  </thead>
+                  <tbody id="rpt-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ════════════════════════════════════
+     MODALS
+════════════════════════════════════ -->
+
+<!-- Add/Edit Student Modal -->
+<div class="modal-overlay" id="modal-student">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="student-modal-title">Add New Student</div>
+      <button class="modal-close" onclick="closeModal('modal-student')">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="student-form" onsubmit="event.preventDefault();saveStudent()">
+        <div style="margin-bottom:20px">
+          <div class="section-title">Personal Information</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Roll Number <span>*</span></label>
+              <input type="text" name="s-roll" class="form-input" placeholder="e.g. FNC-2024-001" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Full Name <span>*</span></label>
+              <input type="text" name="s-name" class="form-input" placeholder="Student full name" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Father's Name <span>*</span></label>
+              <input type="text" name="s-father" class="form-input" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">CNIC</label>
+              <input type="text" name="s-cnic" class="form-input" placeholder="xxxxx-xxxxxxx-x">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Gender</label>
+              <select name="s-gender" class="form-select">
+                <option>Female</option><option>Male</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date of Birth</label>
+              <input type="date" name="s-dob" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Blood Group</label>
+              <select name="s-blood" class="form-select">
+                <option value="">— Select —</option>
+                <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+                <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Phone</label>
+              <input type="tel" name="s-phone" class="form-input" placeholder="03xx-xxxxxxx">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Status</label>
+              <select name="s-status" class="form-select">
+                <option>Active</option><option>Graduated</option>
+                <option>Dropped</option><option>Suspended</option>
+              </select>
+            </div>
+            <div class="form-group form-full">
+              <label class="form-label">Address</label>
+              <textarea name="s-address" class="form-textarea" placeholder="Home address"></textarea>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="section-title">Academic Information</div>
+          <div class="form-grid form-grid-4">
+            <div class="form-group">
+              <label class="form-label">Batch Year <span>*</span></label>
+              <select name="s-batch" class="form-select">
+                <option>2018</option><option>2019</option><option>2020</option>
+                <option>2021</option><option>2022</option><option>2023</option>
+                <option selected>2024</option><option>2025</option><option>2026</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Current Year <span>*</span></label>
+              <select name="s-year" class="form-select">
+                <option value="1">1st Year</option>
+                <option value="2">2nd Year</option>
+                <option value="3">3rd Year</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Guardian Name</label>
+              <input type="text" name="s-guardian" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Guardian Phone</label>
+              <input type="tel" name="s-gphone" class="form-input">
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="saveStudent()">💾 Save Student</button>
+      <button class="btn btn-outline" onclick="closeModal('modal-student')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Student Detail Modal -->
+<div class="modal-overlay" id="modal-detail">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title" id="detail-modal-title">Student Detail</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-outline btn-sm" id="detail-id-btn">🪪 ID Card</button>
+        <button class="btn btn-primary btn-sm" id="detail-edit-btn">✏️ Edit</button>
+        <button class="btn btn-danger btn-sm" id="detail-del-btn">Delete</button>
+        <button class="modal-close" onclick="closeModal('modal-detail')">✕</button>
+      </div>
+    </div>
+    <div class="modal-body" id="detail-body"></div>
+  </div>
+</div>
+
+<!-- Add Fee Modal -->
+<div class="modal-overlay" id="modal-fee">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <div class="modal-title">Record Fee Payment</div>
+      <button class="modal-close" onclick="closeModal('modal-fee')">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="fee-form" onsubmit="event.preventDefault();saveFee()">
+        <div class="form-grid form-grid-2" style="gap:14px">
+          <div class="form-group form-full">
+            <label class="form-label">Student <span>*</span></label>
+            <select name="f-student" id="f-student" class="form-select" required>
+              <option value="">— Select Student —</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fee Type <span>*</span></label>
+            <select name="f-type" class="form-select">
+              <option value="Tuition">Tuition Fee</option>
+              <option value="Admission">Admission Fee</option>
+              <option value="Exam">Exam Fee</option>
+              <option value="Clinical">Clinical Fee</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Amount (Rs.) <span>*</span></label>
+            <input type="number" name="f-amount" class="form-input" placeholder="e.g. 5000" required min="1">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Month</label>
+            <select name="f-month" class="form-select">
+              <option value="">— Select —</option>
+              <option value="1">January</option><option value="2">February</option>
+              <option value="3">March</option><option value="4">April</option>
+              <option value="5">May</option><option value="6">June</option>
+              <option value="7">July</option><option value="8">August</option>
+              <option value="9">September</option><option value="10">October</option>
+              <option value="11">November</option><option value="12">December</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Year <span>*</span></label>
+            <select name="f-year" id="f-year" class="form-select">
+              <option>2023</option><option>2024</option>
+              <option>2025</option><option selected>2026</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Remarks</label>
+            <input type="text" name="f-remarks" class="form-input" placeholder="Optional note">
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="saveFee()">💾 Save & View Receipt</button>
+      <button class="btn btn-outline" onclick="closeModal('modal-fee')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Receipt Modal -->
+<div class="modal-overlay" id="modal-receipt">
+  <div class="modal modal-sm">
+    <div class="modal-header no-print">
+      <div class="modal-title">Fee Receipt</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Print</button>
+        <button class="modal-close" onclick="closeModal('modal-receipt')">✕</button>
+      </div>
+    </div>
+    <div class="modal-body" id="receipt-body"></div>
+  </div>
+</div>
+
+<!-- ID Card Modal -->
+<div class="modal-overlay" id="modal-idcard">
+  <div class="modal modal-sm">
+    <div class="modal-header no-print">
+      <div class="modal-title">Student ID Card</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Print</button>
+        <button class="modal-close" onclick="closeModal('modal-idcard')">✕</button>
+      </div>
+    </div>
+    <div class="modal-body" id="idcard-body"></div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="js/firebase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/app.js"></script>
+<script>
+  // Set current month in report
+  document.getElementById('rpt-month').value = new Date().getMonth()+1;
+</script>
+</body>
+</html>
