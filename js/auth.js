@@ -1,4 +1,3 @@
-// ═══════════════════════════════════════
 // SIMPLE PASSWORD PROTECTION
 // Fatima Nursing College
 // ═══════════════════════════════════════
